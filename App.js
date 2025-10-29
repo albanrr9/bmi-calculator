@@ -6,11 +6,9 @@ import {
   TouchableOpacity,
   Keyboard,
   ScrollView,
-  TouchableWithoutFeedback // Added this back for proper global keyboard dismissal
+  TouchableWithoutFeedback
 } from "react-native";
 import { useState } from "react";
-
-// --- HELPER FUNCTIONS ---
 
 const getBMICategory = (bmi) => {
   const bmiValue = parseFloat(bmi);
@@ -22,10 +20,10 @@ const getBMICategory = (bmi) => {
 
 const getBMIColor = (bmi) => {
   const bmiValue = parseFloat(bmi);
-  if (bmiValue < 18.5) return "#3498DB"; // Blue
-  if (bmiValue < 25) return "#2ECC71"; // Green
-  if (bmiValue < 30) return "#F39C12"; // Orange
-  return "#E74C3C"; // Red
+  if (bmiValue < 18.5) return "#3498DB";
+  if (bmiValue < 25) return "#2ECC71";
+  if (bmiValue < 30) return "#F39C12";
+  return "#E74C3C";
 };
 
 const getHealthTip = (bmi) => {
@@ -44,15 +42,10 @@ const getHealthTip = (bmi) => {
     }
 };
 
-
-// --- MAIN COMPONENT ---
-
 export default function App() {
-  // Metric States (Existing)
   const [height, setHeight] = useState("");
   const [weight, setWeight] = useState("");
 
-  // Imperial States (NEW)
   const [feet, setFeet] = useState("");
   const [inches, setInches] = useState("");
   const [pounds, setPounds] = useState("");
@@ -60,19 +53,15 @@ export default function App() {
   const [bmi, setBmi] = useState("");
   const [isCalculated, setIsCalculated] = useState(false);
   
-  // Unit System State (NEW - default to Metric)
   const [unitSystem, setUnitSystem] = useState("Metric"); 
   
-  // History State (NEW - stores max 10 entries)
   const [history, setHistory] = useState([]);
 
-  // Function to switch units and clear non-active inputs
   const toggleUnitSystem = (newSystem) => {
     if (newSystem !== unitSystem) {
       setUnitSystem(newSystem);
-      setIsCalculated(false); // Reset calculation on unit change
+      setIsCalculated(false);
       setBmi("");
-      // Clear all inputs for the other system to prevent errors
       setHeight("");
       setWeight("");
       setFeet("");
@@ -81,11 +70,8 @@ export default function App() {
     }
   };
 
-  // Logic to handle both calculation and clearing (replacing calculateBMI)
   const handleButtonPress = () => {
-    // 1. CLEAR / RESET STATE
     if (isCalculated) {
-      // Clear all inputs and state for a fresh start
       setHeight("");
       setWeight("");
       setFeet("");
@@ -97,7 +83,6 @@ export default function App() {
       return;
     }
 
-    // 2. CALCULATION LOGIC
     let heightInMeters = 0;
     let weightInKg = 0;
     let isValid = true;
@@ -107,7 +92,6 @@ export default function App() {
     let currentInches = 0;
     let currentPounds = 0;
 
-    // --- METRIC SYSTEM CALCULATION ---
     if (unitSystem === "Metric") {
         const cleanHeight = height.replace(",", ".");
         const cleanWeight = weight.replace(",", ".");
@@ -115,7 +99,6 @@ export default function App() {
         currentHeightCm = parseFloat(cleanHeight);
         currentWeightKg = parseFloat(cleanWeight);
 
-        // Validation & Limits
         if (!cleanHeight || !cleanWeight) {
             alert('Please enter both height (cm) and weight (kg).');
             isValid = false;
@@ -135,7 +118,6 @@ export default function App() {
             weightInKg = currentWeightKg;
         }
 
-    // --- IMPERIAL SYSTEM CALCULATION ---
     } else { 
         const cleanFeet = feet.replace(",", ".");
         const cleanInches = inches.replace(",", ".");
@@ -147,7 +129,6 @@ export default function App() {
         
         const totalInches = currentFeet * 12 + currentInches;
 
-        // Validation
         if (!cleanFeet || !cleanPounds) {
             alert('Please enter height (feet/inches) and weight (lbs).');
             isValid = false;
@@ -155,27 +136,23 @@ export default function App() {
             alert('Please enter valid positive numbers for imperial units.');
             isValid = false;
         } 
-        // Imperial specific limits (approximate conversion)
         else if (totalInches < 40 || totalInches > 120 || currentPounds < 4 || currentPounds > 1350) {
             alert('Please enter realistic imperial measurements (e.g., height between 3ft 4in and 10ft).');
             isValid = false;
         }
 
         if (isValid) {
-            // Conversions: 1 lb = 0.453592 kg; 1 inch = 0.0254 m
             weightInKg = currentPounds * 0.453592;
             heightInMeters = totalInches * 0.0254;
         }
     }
 
     if (isValid) {
-        // Final Calculation and state update
         const bmiValue = weightInKg / (heightInMeters * heightInMeters);
         const finalBmi = bmiValue.toFixed(1);
         setBmi(finalBmi);
         setIsCalculated(true); 
 
-        // 3. HISTORY TRACKING LOGIC
         const newEntry = {
             id: Date.now(),
             bmi: finalBmi,
@@ -186,14 +163,12 @@ export default function App() {
                 ? `${currentHeightCm} cm / ${currentWeightKg} kg`
                 : `${currentFeet}'${currentInches}" / ${currentPounds} lbs`
         };
-        // Add new entry and limit array to 10 entries
         setHistory(prevHistory => [newEntry, ...prevHistory].slice(0, 10)); 
 
         Keyboard.dismiss();
     }
   };
 
-  // Helper functions to conditionally render inputs
   const renderMetricInputs = () => (
     <>
       <View style={styles.inputContainer}>
@@ -226,7 +201,6 @@ export default function App() {
 
   const renderImperialInputs = () => (
     <>
-      {/* Height Inputs (Feet and Inches in one row) */}
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Height</Text>
         <View style={styles.row}>
@@ -251,7 +225,6 @@ export default function App() {
         </View>
       </View>
 
-      {/* Weight Input (Pounds) */}
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Weight (lbs)</Text>
         <TextInput
@@ -277,7 +250,6 @@ export default function App() {
       > 
         <Text style={styles.title}>BMI Calculator</Text>
 
-        {/* Unit Toggle Switch (+5 pts) */}
         <View style={styles.toggleContainer}>
           <TouchableOpacity
             style={[
@@ -311,7 +283,6 @@ export default function App() {
           </TouchableOpacity>
         </View>
 
-        {/* BMI Reference Guide */}
         <View style={styles.referenceContainer}>
             <Text style={styles.referenceTitle}>BMI Categories</Text>
             <Text style={styles.referenceText}>• Below 18.5: Underweight</Text>
@@ -320,10 +291,8 @@ export default function App() {
             <Text style={styles.referenceText}>• 30.0+: Obese</Text>
         </View>
 
-        {/* Conditional Inputs (NEW) */}
         {unitSystem === "Metric" ? renderMetricInputs() : renderImperialInputs()}
 
-        {/* Calculate / New Calculation Button (Toggle) */}
         <TouchableOpacity
           style={[
             styles.button,
@@ -341,7 +310,6 @@ export default function App() {
           </Text>
         </TouchableOpacity>
 
-        {/* Result Display (Conditional Rendering) */}
         {bmi ? (
           <View style={styles.resultContainer}>
             <Text style={styles.resultLabel}>Your BMI:</Text>
@@ -355,14 +323,12 @@ export default function App() {
               <Text style={styles.categoryText}>{getBMICategory(bmi)}</Text>
             </View>
             
-            {/* Health Tips (+3 pts) */}
             <Text style={styles.tipTitle}>Health Tip:</Text>
             <Text style={styles.tipText}>{getHealthTip(bmi)}</Text>
 
           </View>
         ) : null}
         
-        {/* History Tracking (+5 pts) */}
         {history.length > 0 && (
             <View style={styles.historyContainer}>
                 <Text style={styles.historyTitle}>Recent BMI History ({history.length} of 10)</Text>
@@ -390,8 +356,6 @@ export default function App() {
   );
 }
 
-// --- STYLES ---
-
 const NEW_CALCULATION_BUTTON_STYLES = StyleSheet.create({
     button: {
         backgroundColor: "#E1E8EE", 
@@ -414,7 +378,6 @@ const NEW_CALCULATION_BUTTON_STYLES = StyleSheet.create({
 
 
 const styles = StyleSheet.create({
-  // --- LAYOUT & BASE ---
   scrollView: {
     flex: 1, 
     backgroundColor: "#F0F4F8", 
@@ -425,14 +388,13 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
     minHeight: 800,
   },
-  row: { // NEW: For Imperial inputs (feet/inches)
+  row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  halfInput: { // NEW: For Imperial inputs
+  halfInput: {
     flex: 1,
   },
-  // --- TYPOGRAPHY & ELEMENTS ---
   title: {
     fontSize: 34,
     fontWeight: "800",
@@ -464,7 +426,6 @@ const styles = StyleSheet.create({
     elevation: 8,
     color: "#2C3E50",
   },
-  // --- TOGGLE STYLES (NEW) ---
   toggleContainer: {
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
@@ -497,7 +458,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: 'bold',
   },
-  // --- BUTTON STYLES ---
   button: {
     backgroundColor: "#3498DB",
     padding: 20,
@@ -516,7 +476,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     letterSpacing: 0.5,
   },
-  // --- RESULT STYLES ---
   resultContainer: {
     backgroundColor: "#FFFFFF",
     padding: 35,
@@ -559,20 +518,19 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textTransform: "uppercase",
   },
-  tipTitle: { // NEW: Health Tips Title
+  tipTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#34495E',
     marginTop: 25,
     marginBottom: 5,
   },
-  tipText: { // NEW: Health Tips Text
+  tipText: {
     fontSize: 16,
     color: '#5D6D7E',
     textAlign: 'center',
     lineHeight: 22,
   },
-  // --- REFERENCE GUIDE STYLES ---
   referenceContainer: {
     backgroundColor: "#FFFFFF",
     padding: 15,
@@ -598,7 +556,6 @@ const styles = StyleSheet.create({
     color: "#5D6D7E",
     lineHeight: 24,
   },
-  // --- HISTORY STYLES (NEW) ---
   historyContainer: {
     marginTop: 30,
     padding: 20,
